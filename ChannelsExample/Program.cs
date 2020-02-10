@@ -11,10 +11,20 @@ namespace ChannelsExample
     {
         static async Task Main(string[] args)
         {
-            const int maxMessagesToBuffer = 10;
-            const int messagesToSend = 10;
-            const int producersCount = 10;
-            const int consumersCount = 3;
+            await Run(1, 10, 1, 1);
+
+            await Run(1, 10, 1, 3);
+
+            await Run(100, 10, 1, 3);
+
+            Logger.Log("done!");
+            Console.ReadLine();
+        }
+
+        private static async Task Run(int maxMessagesToBuffer, int messagesToSend, int producersCount, int consumersCount)
+        {
+            Logger.Log("*** STARTING EXECUTION ***");
+            Logger.Log($"producers #: {producersCount}, buffer size: {maxMessagesToBuffer}, consumers #: {consumersCount}");
 
             var channel = Channel.CreateBounded<Envelope>(maxMessagesToBuffer);
 
@@ -26,9 +36,21 @@ namespace ChannelsExample
                 ProduceAsync(channel, messagesToSend, producersCount, tokenSource)
             };
             await Task.WhenAll(tasks);
+            Logger.Log("*** EXECUTION COMPLETE ***");
+        }
 
-            Logger.Log("done!");
-            Console.ReadLine();
+        private static async Task SingleProducerMultiConsumers(int maxMessagesToBuffer, int messagesToSend, int producersCount, int consumersCount)
+        {
+            var channel = Channel.CreateBounded<Envelope>(maxMessagesToBuffer);
+
+            var tokenSource = new CancellationTokenSource();
+            var cancellationToken = tokenSource.Token;
+
+            var tasks = new List<Task>(StartConsumers(channel, consumersCount, cancellationToken))
+            {
+                ProduceAsync(channel, messagesToSend, producersCount, tokenSource)
+            };
+            await Task.WhenAll(tasks);
         }
 
         private static Task[] StartConsumers(Channel<Envelope> channel, int consumersCount, CancellationToken cancellationToken)
