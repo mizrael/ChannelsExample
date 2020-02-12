@@ -23,13 +23,10 @@ namespace ChannelsExample
             
             try
             {
-                while (await _reader.WaitToReadAsync(cancellationToken))
+                await foreach (var message in _reader.ReadAllAsync(cancellationToken))
                 {
-                    await foreach (var message in _reader.ReadAllAsync(cancellationToken))
-                    {
-                        Logger.Log($"CONSUMER ({_instanceId})> Received: {message.Payload}", ConsoleColor.Green);
-                        await Task.Delay(500, cancellationToken);
-                    }
+                    Logger.Log($"CONSUMER ({_instanceId})> Received: {message.Payload}", ConsoleColor.Green);
+                    await Task.Delay(500, cancellationToken);
                 }
             }
             catch (OperationCanceledException ex)

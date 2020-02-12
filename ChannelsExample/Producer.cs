@@ -18,13 +18,8 @@ namespace ChannelsExample
 
         public async Task PublishAsync(Envelope message, CancellationToken cancellationToken = default)
         {
-            while (await _writer.WaitToWriteAsync(cancellationToken))
-            {                
-                if (_writer.TryWrite(message)){
-                    Logger.Log($"Producer {_instanceId} > published '{message.Payload}'", ConsoleColor.Yellow);
-                    return;
-                }                    
-            }
+            await _writer.WriteAsync(message, cancellationToken);
+            Logger.Log($"Producer {_instanceId} > published '{message.Payload}'", ConsoleColor.Yellow);
         }
     }
 }
